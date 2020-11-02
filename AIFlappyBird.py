@@ -245,9 +245,22 @@ def draw_win(win,bird,pipe,base,score):
     bird.draw(win)
     pygame.display.update()
 
-def main():
+def main(genomes, config):
+    nets = []
+    ge =[]
+    birds = []
+
+    for g in genomes:
+        net = neat.nn.FeedForwardNetwork(g, config)
+        nets.append(net)
+        birds.append(Bird(230,350))
+        g.fitness = g
+        ge.append(g)
+
+        
+
     #Create a bird and a window
-    bird = Bird(230,350)
+    birds = []
     base = Base(730)
     pipes = [Pipe(700)]
     win = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -267,23 +280,36 @@ def main():
         rem = []
         add_pipe = False
         for pipe in pipes:
-            pipe.move()
+            for x, bird in enumerate(birds):
+                if pipe.collide(bird):
+                    ge[x].fitness -= 1
+                    birds.pop(x)
+                    nets.pop(x)
+                    ge.pop(x)
+                
+                if not pipe.passed and pipe.x < bird.x:
+                    pipe.passed =True
+                    add_pipe =True
+            
             if pipe.x + pipe.PIPE_TOP.get_width() < 0:
                 rem.append(pipe)
-                
-            if not pipe.passed and pipe.x < bird.x:
-                pipe.passed =True
-                add_pipe =True
-                  
+
+            pipe.move()
+
         if add_pipe:
             score+=1
+            for g in ge:
+                g.fitness += 5
             pipes.append(Pipe(700))
             
         for r in rem:
             pipes.remove(r)
-        
-        if bird.y + bird.img.get_height() >= 730:
-            pass
+
+        for x,bird in enumerate(birds):
+            if bird.y + bird.img.get_height() >= 730:
+                birds.pop(x)
+                nets.pop(x)
+                ge.pop(x)
              
         base.move()
         draw_win(win,bird,pipes,base, score)
@@ -291,3 +317,22 @@ def main():
     sys.exit()
 
 main()
+
+def run(config_path):
+    #Sets config parameters from configFile
+    config = neat.config.Config(neat.DefaultGenome, 
+                neat.DefaultReproduction, neat.DefaultSpeciesSet, 
+                 neat.DefaultStagnation, config_path)
+    #Set population
+    pop = neat.Population(config)
+    #Gives us stats
+    pop.add_reporter(neat.StdOutReporter(True))
+    #Get stats
+    stats = neat.StatisticsReporter()
+    pop.add_reporter(stats)
+    winner = pop.run(main,50)
+
+if __name__ == "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "configFile.txt")
+    run(config_path)
