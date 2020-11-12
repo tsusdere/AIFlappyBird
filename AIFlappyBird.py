@@ -226,7 +226,6 @@ def draw_win(win,birds,pipes,base,score , gen):
     pygame.display.update()
 
 def main(genomes,config):
-
     global GEN
     GEN +=1
     win = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -298,12 +297,15 @@ def main(genomes,config):
                     add_pipe=True
 
             #If pipe moves off screen append them to the removed list
+            
+
             if pipe.x + pipe.PIPE_TOP.get_width() < 0:
                 rem.append(pipe)
 
             pipe.move()
 
         if add_pipe:
+
             score += 1
             #Increse the fitness score
             for g in ge:
@@ -321,6 +323,9 @@ def main(genomes,config):
                 nets.pop(x)
                 ge.pop(x)
 
+
+
+            
         base.move()
         draw_win(win,birds,pipes,base,score, GEN)
 
@@ -335,7 +340,9 @@ def run(config_path):
 
     winner=p.run(main,50)
 
+
 if __name__ == "__main__":
     local_dir=os.path.dirname(__file__)
     config_path=os.path.join(local_dir,"configFile.txt")
     run(config_path)
+
